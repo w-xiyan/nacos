@@ -69,7 +69,8 @@ public class NacosConfigService implements ConfigService {
     private String namespace;
     
     private final ConfigFilterChainManager configFilterChainManager;
-    
+
+    //构造器实例化对象
     public NacosConfigService(Properties properties) throws NacosException {
         ValidatorUtils.checkInitParam(properties);
         
@@ -77,7 +78,8 @@ public class NacosConfigService implements ConfigService {
         this.configFilterChainManager = new ConfigFilterChainManager(properties);
         ServerListManager serverListManager = new ServerListManager(properties);
         serverListManager.start();
-        
+
+        //核心1
         this.worker = new ClientWorker(this.configFilterChainManager, serverListManager, properties);
         // will be deleted in 2.0 later versions
         agent = new ServerHttpAgent(serverListManager);

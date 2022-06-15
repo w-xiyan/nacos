@@ -446,6 +446,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
     
     @Override
     public void onApplicationEvent(WebServerInitializedEvent event) {
+        // 判断服务的 namespace,一般都是null
         String serverNamespace = event.getApplicationContext().getServerNamespace();
         if (SPRING_MANAGEMENT_CONTEXT_NAMESPACE.equals(serverNamespace)) {
             // ignore

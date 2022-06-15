@@ -366,6 +366,8 @@ public class ConfigController {
     
     /**
      * Query the configuration information and return it in JSON format.
+     *
+     * 获取配置列表
      */
     @GetMapping(params = "search=accurate")
     @Secured(action = ActionTypes.READ, signType = SignType.CONFIG)

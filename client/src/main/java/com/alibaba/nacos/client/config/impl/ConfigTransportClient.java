@@ -132,6 +132,7 @@ public abstract class ConfigTransportClient {
         securityProxy.login(this.properties);
         this.executor.scheduleWithFixedDelay(() -> securityProxy.login(properties), 0,
                 this.securityInfoRefreshIntervalMills, TimeUnit.MILLISECONDS);
+        //核心
         startInternal();
     }
     

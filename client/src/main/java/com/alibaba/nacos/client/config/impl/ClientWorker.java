@@ -399,7 +399,8 @@ public class ClientWorker implements Closeable {
     private String blank2defaultGroup(String group) {
         return StringUtils.isBlank(group) ? Constants.DEFAULT_GROUP : group.trim();
     }
-    
+
+    //主要是处理客户端与服务端交互的
     @SuppressWarnings("PMD.ThreadPoolCreationRule")
     public ClientWorker(final ConfigFilterChainManager configFilterChainManager, ServerListManager serverListManager,
             final Properties properties) throws NacosException {
@@ -417,6 +418,7 @@ public class ClientWorker implements Closeable {
                     return t;
                 });
         agent.setExecutor(executorService);
+        //核心1
         agent.start();
         
     }
@@ -688,10 +690,12 @@ public class ClientWorker implements Closeable {
             executor.schedule(() -> {
                 while (!executor.isShutdown() && !executor.isTerminated()) {
                     try {
+                        //核心1
                         listenExecutebell.poll(5L, TimeUnit.SECONDS);
                         if (executor.isShutdown() || executor.isTerminated()) {
                             continue;
                         }
+                        //核心2
                         executeConfigListen();
                     } catch (Exception e) {
                         LOGGER.error("[ rpc listen execute ] [rpc listen] exception", e);
