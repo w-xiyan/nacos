@@ -147,6 +147,7 @@ public class ControllerMethodsCache {
         for (String classPath : requestMapping.value()) {
             for (Method method : clazz.getMethods()) {
                 if (!method.isAnnotationPresent(RequestMapping.class)) {
+                    //执行相应的post，put操作
                     parseSubAnnotations(method, classPath);
                     continue;
                 }

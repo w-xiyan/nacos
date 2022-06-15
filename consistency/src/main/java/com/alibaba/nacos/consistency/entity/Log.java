@@ -332,6 +332,7 @@ private static final long serialVersionUID = 0L;
     return extendInfo_;
   }
 
+  @Override
   public int getExtendInfoCount() {
     return internalGetExtendInfo().getMap().size();
   }
@@ -394,8 +395,12 @@ private static final long serialVersionUID = 0L;
   @java.lang.Override
   public final boolean isInitialized() {
     byte isInitialized = memoizedIsInitialized;
-    if (isInitialized == 1) return true;
-    if (isInitialized == 0) return false;
+    if (isInitialized == 1) {
+      return true;
+    }
+    if (isInitialized == 0) {
+      return false;
+    }
 
     memoizedIsInitialized = 1;
     return true;
@@ -431,7 +436,9 @@ private static final long serialVersionUID = 0L;
   @java.lang.Override
   public int getSerializedSize() {
     int size = memoizedSize;
-    if (size != -1) return size;
+    if (size != -1) {
+      return size;
+    }
 
     size = 0;
     if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(group_)) {

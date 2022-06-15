@@ -36,6 +36,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -50,7 +51,7 @@ import java.util.regex.Pattern;
 @RequestMapping("/v1/console/namespaces")
 public class NamespaceController {
     
-    @Autowired
+    @Resource
     private PersistService persistService;
     
     private final Pattern namespaceIdCheckPattern = Pattern.compile("^[\\w-]+");
@@ -73,7 +74,7 @@ public class NamespaceController {
     
     /**
      * Get namespace list.
-     *
+     * 获取命名空间
      * @return namespace list
      */
     @GetMapping
@@ -116,7 +117,7 @@ public class NamespaceController {
     
     /**
      * create namespace.
-     *
+     * 创建命名空间
      * @param namespaceName namespace Name
      * @param namespaceDesc namespace Desc
      * @return whether create ok
@@ -162,7 +163,7 @@ public class NamespaceController {
     
     /**
      * edit namespace.
-     *
+     * 修改命名空间
      * @param namespace         namespace
      * @param namespaceShowName namespace ShowName
      * @param namespaceDesc     namespace Desc
