@@ -282,30 +282,36 @@ public class InstanceOperatorServiceImpl implements InstanceOperator {
     @Override
     public int handleBeat(String namespaceId, String serviceName, String ip, int port, String cluster,
             RsInfo clientBeat, BeatInfoInstanceBuilder builder) throws NacosException {
+        //获取相关服务实例
         com.alibaba.nacos.naming.core.Instance instance = serviceManager
                 .getInstance(namespaceId, serviceName, cluster, ip, port);
-        
+        //实例不存在
         if (instance == null) {
+            //如果心跳内容也没有就返回找不到
             if (clientBeat == null) {
                 return NamingResponseCode.RESOURCE_NOT_FOUND;
             }
             
             Loggers.SRV_LOG.warn("[CLIENT-BEAT] The instance has been removed for health mechanism, "
                     + "perform data compensation operations, beat: {}, serviceName: {}", clientBeat, serviceName);
+            //否则根据心跳内容创建一个实例
             instance = parseInstance(builder.setBeatInfo(clientBeat).setServiceName(serviceName).build());
+
+            //注册实例
             serviceManager.registerInstance(namespaceId, serviceName, instance);
         }
         
         Service service = serviceManager.getService(namespaceId, serviceName);
-        
+        // 服务未找到
         serviceManager.checkServiceIsNull(service, namespaceId, serviceName);
-        
+        //不存在的话，要创建一个进行处理
         if (clientBeat == null) {
             clientBeat = new RsInfo();
             clientBeat.setIp(ip);
             clientBeat.setPort(port);
             clientBeat.setCluster(cluster);
         }
+        //开启一次性心跳检查任务
         service.processClientBeat(clientBeat);
         return NamingResponseCode.OK;
     }

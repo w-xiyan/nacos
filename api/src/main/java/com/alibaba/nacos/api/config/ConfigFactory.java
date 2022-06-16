@@ -38,8 +38,11 @@ public class ConfigFactory {
      */
     public static ConfigService createConfigService(Properties properties) throws NacosException {
         try {
+            //通过Class.forName得到NacosConfigService的Class对象
             Class<?> driverImplClass = Class.forName("com.alibaba.nacos.client.config.NacosConfigService");
+            //拿到以Properties为参数的构造方法
             Constructor constructor = driverImplClass.getConstructor(Properties.class);
+            //通过反射创建实例对象并返回
             ConfigService vendorImpl = (ConfigService) constructor.newInstance(properties);
             return vendorImpl;
         } catch (Throwable e) {

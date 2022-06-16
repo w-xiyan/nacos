@@ -35,7 +35,7 @@ public class NacosFactory {
     
     /**
      * Create config service.
-     *
+     *客户端需要做的事情
      * @param properties init param
      * @return config
      * @throws NacosException Exception

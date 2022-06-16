@@ -129,7 +129,9 @@ public abstract class ConfigTransportClient {
      * base start client.
      */
     public void start() throws NacosException {
+        //是否登录信息判断
         securityProxy.login(this.properties);
+        //5毫秒的任务，检查配置信息
         this.executor.scheduleWithFixedDelay(() -> securityProxy.login(properties), 0,
                 this.securityInfoRefreshIntervalMills, TimeUnit.MILLISECONDS);
         //核心

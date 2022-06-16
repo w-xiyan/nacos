@@ -16,13 +16,13 @@
 
 package com.alibaba.nacos.example;
 
-import java.util.Properties;
-import java.util.concurrent.Executor;
-
 import com.alibaba.nacos.api.NacosFactory;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.config.listener.Listener;
 import com.alibaba.nacos.api.exception.NacosException;
+
+import java.util.Properties;
+import java.util.concurrent.Executor;
 
 /**
  * Config service example.
@@ -32,14 +32,19 @@ import com.alibaba.nacos.api.exception.NacosException;
 public class ConfigExample {
 
     public static void main(String[] args) throws NacosException, InterruptedException {
+        //1.构建配置Properties对象，添加serverAddr
         String serverAddr = "localhost";
         String dataId = "test";
         String group = "DEFAULT_GROUP";
         Properties properties = new Properties();
         properties.put("serverAddr", serverAddr);
+
+        //2.创建ConfigService实例，这个是nacos作为配置中心时的客户端接口。
         ConfigService configService = NacosFactory.createConfigService(properties);
+        //3.根据dataId和group获取配置内容。 配置资源的资源坐标由dataId、group、namespace唯一确定。configService在初始化时给了默认的namespace。
         String content = configService.getConfig(dataId, group, 5000);
         System.out.println(content);
+        //4.添加监听器
         configService.addListener(dataId, group, new Listener() {
             @Override
             public void receiveConfigInfo(String configInfo) {
@@ -52,6 +57,7 @@ public class ConfigExample {
             }
         });
 
+        //发布、获取、删除配置等操作
         boolean isPublishOk = configService.publishConfig(dataId, group, "content");
         System.out.println(isPublishOk);
 

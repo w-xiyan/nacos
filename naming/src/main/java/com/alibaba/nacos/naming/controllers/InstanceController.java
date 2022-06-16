@@ -365,10 +365,12 @@ public class InstanceController {
     public ObjectNode beat(HttpServletRequest request) throws Exception {
         
         ObjectNode result = JacksonUtils.createEmptyJsonNode();
+        //设置要求的心跳间隔 默认5秒
         result.put(SwitchEntry.CLIENT_BEAT_INTERVAL, switchDomain.getClientBeatInterval());
-        
+
         String beat = WebUtils.optional(request, "beat", StringUtils.EMPTY);
         RsInfo clientBeat = null;
+        //如果有心跳内容，也就不是轻量级心跳，转换为RsInfo
         if (StringUtils.isNotBlank(beat)) {
             clientBeat = JacksonUtils.toObj(beat, RsInfo.class);
         }
@@ -378,6 +380,7 @@ public class InstanceController {
         int port = Integer.parseInt(WebUtils.optional(request, "port", "0"));
         if (clientBeat != null) {
             if (StringUtils.isNotBlank(clientBeat.getCluster())) {
+                //获取集群名
                 clusterName = clientBeat.getCluster();
             } else {
                 // fix #2533
@@ -391,6 +394,8 @@ public class InstanceController {
         NamingUtils.checkServiceNameFormat(serviceName);
         Loggers.SRV_LOG.debug("[CLIENT-BEAT] full arguments: beat: {}, serviceName: {}, namespaceId: {}", clientBeat,
                 serviceName, namespaceId);
+
+        //获取相关服务实例
         BeatInfoInstanceBuilder builder = BeatInfoInstanceBuilder.newBuilder();
         builder.setRequest(request);
         int resultCode = getInstanceOperator()

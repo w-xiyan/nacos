@@ -404,8 +404,9 @@ public class ClientWorker implements Closeable {
     @SuppressWarnings("PMD.ThreadPoolCreationRule")
     public ClientWorker(final ConfigFilterChainManager configFilterChainManager, ServerListManager serverListManager,
             final Properties properties) throws NacosException {
+        // 过滤器
         this.configFilterChainManager = configFilterChainManager;
-        
+        // 初始化配置
         init(properties);
         
         agent = new ConfigRpcTransportClient(properties, serverListManager);
@@ -690,12 +691,12 @@ public class ClientWorker implements Closeable {
             executor.schedule(() -> {
                 while (!executor.isShutdown() && !executor.isTerminated()) {
                     try {
-                        //核心1
+                        //5s 心跳
                         listenExecutebell.poll(5L, TimeUnit.SECONDS);
                         if (executor.isShutdown() || executor.isTerminated()) {
                             continue;
                         }
-                        //核心2
+                        //执行config监听
                         executeConfigListen();
                     } catch (Exception e) {
                         LOGGER.error("[ rpc listen execute ] [rpc listen] exception", e);
@@ -723,11 +724,12 @@ public class ClientWorker implements Closeable {
             long now = System.currentTimeMillis();
             boolean needAllSync = now - lastAllSyncTime >= ALL_SYNC_INTERNAL;
             for (CacheData cache : cacheMap.get().values()) {
-                
+                //属于当前长轮询任务的
                 synchronized (cache) {
                     
                     //check local listeners consistent.
                     if (cache.isSyncWithServer()) {
+                        //有改变的话会通知
                         cache.checkListenerMd5();
                         if (!needAllSync) {
                             continue;
@@ -736,6 +738,7 @@ public class ClientWorker implements Closeable {
                     
                     if (!CollectionUtils.isEmpty(cache.getListeners())) {
                         //get listen  config
+                        //用本地配置
                         if (!cache.isUseLocalConfigInfo()) {
                             List<CacheData> cacheDatas = listenCachesMap.get(String.valueOf(cache.getTaskId()));
                             if (cacheDatas == null) {

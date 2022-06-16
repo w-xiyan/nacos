@@ -182,18 +182,22 @@ public class ServerListManager implements Closeable {
     public ServerListManager(Properties properties) throws NacosException {
         this.isStarted = false;
         this.serverAddrsStr = properties.getProperty(PropertyKeyConst.SERVER_ADDR);
+        //命名空间
         String namespace = properties.getProperty(PropertyKeyConst.NAMESPACE);
+        // 初始化配置 encoding、maxRetry、ak、sk
+        // ak、sk在登录认证时未用到。发送get、post、delete请求时需要验证
         initParam(properties);
         
         if (StringUtils.isNotBlank(namespace)) {
             this.namespace = namespace;
             this.tenant = namespace;
         }
-        
+
         if (StringUtils.isNotEmpty(serverAddrsStr)) {
             this.isFixed = true;
             List<String> serverAddrs = new ArrayList<>();
             StringTokenizer serverAddrsTokens = new StringTokenizer(this.serverAddrsStr, ",;");
+            // 5秒一次的登录认证（会校验是否在token窗口内，如果不在，则重新获取token），刷新token和token窗口
             while (serverAddrsTokens.hasMoreTokens()) {
                 String serverAddr = serverAddrsTokens.nextToken().trim();
                 if (serverAddr.startsWith(HTTP_PREFIX) || serverAddr.startsWith(HTTPS_PREFIX)) {
@@ -317,8 +321,10 @@ public class ServerListManager implements Closeable {
         if (isStarted || isFixed) {
             return;
         }
-        
+
+        //先run一下，然后丢掉线程池里每隔30秒再run一下
         GetServerListTask getServersTask = new GetServerListTask(addressServerUrl);
+        // 这里不是新线程，是直接调用run方法。
         for (int i = 0; i < initServerlistRetryTimes && serverUrls.isEmpty(); ++i) {
             getServersTask.run();
             try {
@@ -336,6 +342,7 @@ public class ServerListManager implements Closeable {
         }
         
         // executor schedules the timer task
+        // 30秒执行一次任务，更新服务状态
         this.executorService.scheduleWithFixedDelay(getServersTask, 0L, 30L, TimeUnit.SECONDS);
         isStarted = true;
     }
@@ -373,6 +380,7 @@ public class ServerListManager implements Closeable {
              get serverlist from nameserver
              */
             try {
+                //获取服务列表，如果有变更就更新
                 updateIfChanged(getApacheServerList(url, name));
             } catch (Exception e) {
                 LOGGER.error("[" + name + "][update-serverlist] failed to update serverlist from address server!", e);
@@ -406,6 +414,7 @@ public class ServerListManager implements Closeable {
         currentServerAddr = iterator.next();
         
         // Using unified event processor, NotifyCenter
+        // 服务列表发生变更，发布事件消息
         NotifyCenter.publishEvent(new ServerlistChangeEvent());
         LOGGER.info("[{}] [update-serverlist] serverlist updated to {}", name, serverUrls);
     }

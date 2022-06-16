@@ -73,14 +73,20 @@ public class NacosConfigService implements ConfigService {
     //构造器实例化对象
     public NacosConfigService(Properties properties) throws NacosException {
         ValidatorUtils.checkInitParam(properties);
-        
+
+        //初始化namespace
         initNamespace(properties);
+
+        //构造http代理并start
+        // ServerHttpAgent http代理
+        // ConfigFilterChainManager 又代理了一次
+        // 另外，屏蔽了集群逻辑。提供的方法只是统一的http调用。
         this.configFilterChainManager = new ConfigFilterChainManager(properties);
         ServerListManager serverListManager = new ServerListManager(properties);
         serverListManager.start();
-
-        //核心1
+        //创建worker
         this.worker = new ClientWorker(this.configFilterChainManager, serverListManager, properties);
+
         // will be deleted in 2.0 later versions
         agent = new ServerHttpAgent(serverListManager);
         
@@ -155,6 +161,7 @@ public class NacosConfigService implements ConfigService {
         // but is maintained by user.
         // This is designed for certain scenario like client emergency reboot,
         // changing config needed in the same time, while nacos server is down.
+        //另外ConfigService对配置的增删改查就是调用对应的服务端接口，这个就没什么好分析的了，要注意一个本地缓存的问题，优先使用本地缓存，是缓存文件。
         String content = LocalConfigInfoProcessor.getFailover(worker.getAgentName(), dataId, group, tenant);
         if (content != null) {
             LOGGER.warn("[{}] [get-config] get failover ok, dataId={}, group={}, tenant={}, config={}",

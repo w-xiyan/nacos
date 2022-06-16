@@ -69,16 +69,18 @@ public class NacosClientAuthServiceImpl extends AbstractClientAuthService {
     @Override
     public Boolean login(Properties properties) {
         try {
+            // token刷新窗口范围内，返回true
             if ((System.currentTimeMillis() - lastRefreshTime) < TimeUnit.SECONDS
                     .toMillis(tokenTtl - tokenRefreshWindow)) {
                 return true;
             }
-            
+
             if (StringUtils.isBlank(properties.getProperty(PropertyKeyConst.USERNAME))) {
                 lastRefreshTime = System.currentTimeMillis();
                 return true;
             }
-            
+
+            // 集群每个server进行登录验证
             for (String server : this.serverList) {
                 HttpLoginProcessor httpLoginProcessor = new HttpLoginProcessor(nacosRestTemplate);
                 properties.setProperty(NacosAuthLoginConstant.SERVER, server);

@@ -94,11 +94,13 @@ public class ClientBeatCheckTask implements BeatCheckTask {
             if (!getSwitchDomain().isHealthCheckEnabled()) {
                 return;
             }
-            
+
+            //当前service的所有实例
             List<Instance> instances = service.allIPs(true);
             
             // first set health status of instances:
             for (Instance instance : instances) {
+                // 超过健康检查时间
                 if (System.currentTimeMillis() - instance.getLastBeat() > instance.getInstanceHeartBeatTimeOut()) {
                     if (!instance.isMarked()) {
                         if (instance.isHealthy()) {
@@ -124,7 +126,8 @@ public class ClientBeatCheckTask implements BeatCheckTask {
                 if (instance.isMarked()) {
                     continue;
                 }
-                
+
+                // 超过删除检查时间
                 if (System.currentTimeMillis() - instance.getLastBeat() > instance.getIpDeleteTimeout()) {
                     // delete instance
                     Loggers.SRV_LOG.info("[AUTO-DELETE-IP] service: {}, ip: {}", service.getName(),
