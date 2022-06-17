@@ -52,6 +52,16 @@ import static com.alibaba.nacos.naming.misc.Loggers.SRV_LOG;
  * TCP health check processor.
  *
  * @author nacos
+ *
+ * Nacos的健康检测有两种模式：
+ * 临时实例：
+ * 采⽤客户端⼼跳检测模式，⼼跳周期5秒
+ * ⼼跳间隔超过15秒则标记为不健康
+ * ⼼跳间隔超过30秒则从服务列表删除
+ * 永久实例：
+ * 采⽤服务端主动健康检测⽅式
+ * 周期为2000 + 5000毫秒内的随机数
+ * 检测异常只会标记为不健康，不会删除
  */
 @Component
 @SuppressWarnings("PMD.ThreadPoolCreationRule")
@@ -101,6 +111,7 @@ public class TcpSuperSenseProcessor implements HealthCheckProcessor, Runnable {
     
     @Override
     public void process(HealthCheckTask task) {
+        //获取所以非临时性实例的集合
         List<Instance> ips = task.getCluster().allIPs(false);
         
         if (CollectionUtils.isEmpty(ips)) {
@@ -108,7 +119,7 @@ public class TcpSuperSenseProcessor implements HealthCheckProcessor, Runnable {
         }
         
         for (Instance ip : ips) {
-            
+
             if (ip.isMarked()) {
                 if (SRV_LOG.isDebugEnabled()) {
                     SRV_LOG.debug("tcp check, ip is marked as to skip health check, ip:" + ip.getIp());
@@ -124,14 +135,17 @@ public class TcpSuperSenseProcessor implements HealthCheckProcessor, Runnable {
                         .reEvaluateCheckRT(task.getCheckRtNormalized() * 2, task, switchDomain.getTcpHealthParams());
                 continue;
             }
-            
+            // 封装健康检测信息到beat
             Beat beat = new Beat(ip, task);
+            //放入一个阻塞队列中
             taskQueue.add(beat);
             MetricsMonitor.getTcpHealthCheckMonitor().incrementAndGet();
         }
     }
-    
+
+    //处理健康检测的任务
     private void processTask() throws Exception {
+        //将任务封装为⼀个 TaskProcessor，并放⼊集合
         Collection<Callable<Void>> tasks = new LinkedList<>();
         do {
             Beat beat = taskQueue.poll(CONNECT_TIMEOUT_MS / 2, TimeUnit.MILLISECONDS);
@@ -141,7 +155,7 @@ public class TcpSuperSenseProcessor implements HealthCheckProcessor, Runnable {
             
             tasks.add(new TaskProcessor(beat));
         } while (taskQueue.size() > 0 && tasks.size() < NIO_THREAD_COUNT * 64);
-        
+        //批量处理集合中的任务
         for (Future<?> f : GlobalExecutor.invokeAllTcpSuperSenseTask(tasks)) {
             f.get();
         }
@@ -151,6 +165,7 @@ public class TcpSuperSenseProcessor implements HealthCheckProcessor, Runnable {
     public void run() {
         while (true) {
             try {
+                //处理任务
                 processTask();
                 
                 int readyCount = selector.selectNow();
@@ -360,9 +375,11 @@ public class TcpSuperSenseProcessor implements HealthCheckProcessor, Runnable {
         public TaskProcessor(Beat beat) {
             this.beat = beat;
         }
-        
+
+
         @Override
         public Void call() {
+            //获取检测任务已经等待的时长
             long waited = System.currentTimeMillis() - beat.getStartTime();
             if (waited > MAX_WAIT_TIME_MILLISECONDS) {
                 Loggers.SRV_LOG.warn("beat task waited too long: " + waited + "ms");
@@ -370,8 +387,9 @@ public class TcpSuperSenseProcessor implements HealthCheckProcessor, Runnable {
             
             SocketChannel channel = null;
             try {
+                // 获取实例信息
                 Instance instance = beat.getIp();
-                
+
                 BeatKey beatKey = keyMap.get(beat.toString());
                 if (beatKey != null && beatKey.key.isValid()) {
                     if (System.currentTimeMillis() - beatKey.birthTime < TCP_KEEP_ALIVE_MILLIS) {
@@ -382,7 +400,7 @@ public class TcpSuperSenseProcessor implements HealthCheckProcessor, Runnable {
                     beatKey.key.cancel();
                     beatKey.key.channel().close();
                 }
-                
+                // 通过NIO建⽴TCP连接
                 channel = SocketChannel.open();
                 channel.configureBlocking(false);
                 // only by setting this can we make the socket close event asynchronous

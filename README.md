@@ -110,3 +110,13 @@ Contributors are welcomed to join Nacos project. Please check [CONTRIBUTING](./C
 
 各模块的关系：
 ![img.png](img.png)
+
+Nacos 灰度原理
+
+* Nacos 的灰度发布原理其实并不复杂, 本质就如同下面这张流程图.
+
+![img_1.png](img_1.png)
+
+* 具体的使用方法, 如果使用的是自建的社区 Nacos, 可以访问 http://ip:port/nacos 进入控制台, 在配置管理的编辑页面进行配置灰度发布, 如下图.
+
+![img_2.png](img_2.png)

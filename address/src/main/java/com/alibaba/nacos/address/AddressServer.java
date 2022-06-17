@@ -29,7 +29,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class AddressServer {
     
     public static void main(String[] args) {
-        
+
         SpringApplication.run(AddressServer.class, args);
     }
 }
+

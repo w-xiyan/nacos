@@ -722,12 +722,13 @@ public class ClientWorker implements Closeable {
             Map<String, List<CacheData>> listenCachesMap = new HashMap<>(16);
             Map<String, List<CacheData>> removeListenCachesMap = new HashMap<>(16);
             long now = System.currentTimeMillis();
+            //时间间隔判断是否大于5s
             boolean needAllSync = now - lastAllSyncTime >= ALL_SYNC_INTERNAL;
             for (CacheData cache : cacheMap.get().values()) {
                 //属于当前长轮询任务的
                 synchronized (cache) {
                     
-                    //check local listeners consistent.
+                    //check local listeners consistent.检查本地侦听器是否一致
                     if (cache.isSyncWithServer()) {
                         //有改变的话会通知
                         cache.checkListenerMd5();
@@ -781,6 +782,7 @@ public class ClientWorker implements Closeable {
                     configChangeListenRequest.setListen(true);
                     try {
                         RpcClient rpcClient = ensureRpcClient(taskId);
+                        //
                         ConfigChangeBatchListenResponse configChangeBatchListenResponse = (ConfigChangeBatchListenResponse) requestProxy(
                                 rpcClient, configChangeListenRequest);
                         if (configChangeBatchListenResponse != null && configChangeBatchListenResponse.isSuccess()) {
@@ -796,6 +798,7 @@ public class ClientWorker implements Closeable {
                                                     changeConfig.getTenant());
                                     changeKeys.add(changeKey);
                                     boolean isInitializing = cacheMap.get().get(changeKey).isInitializing();
+                                    //
                                     refreshContentAndCheck(changeKey, !isInitializing);
                                 }
                                 

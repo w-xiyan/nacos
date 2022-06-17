@@ -445,7 +445,9 @@ public class ServiceManager implements RecordListener<Service> {
      */
     public void createServiceIfAbsent(String namespaceId, String serviceName, boolean local, Cluster cluster)
             throws NacosException {
+        //get the service
         Service service = getService(namespaceId, serviceName);
+        //service exists ,create
         if (service == null) {
             
             Loggers.SRV_LOG.info("creating empty service {}:{}", namespaceId, serviceName);
@@ -461,7 +463,7 @@ public class ServiceManager implements RecordListener<Service> {
                 service.getClusterMap().put(cluster.getName(), cluster);
             }
             service.validate();
-            
+            //写入注册表，并初始化 initialize
             putServiceAndInit(service);
             if (!local) {
                 addOrReplaceService(service);
@@ -480,7 +482,7 @@ public class ServiceManager implements RecordListener<Service> {
      * @throws Exception any error occurred in the process
      */
     public void registerInstance(String namespaceId, String serviceName, Instance instance) throws NacosException {
-        
+        //判断是否第一次注册，如果是则创建空的服务加入注册表
         createEmptyService(namespaceId, serviceName, instance.isEphemeral());
         
         Service service = getService(namespaceId, serviceName);
@@ -865,9 +867,12 @@ public class ServiceManager implements RecordListener<Service> {
     }
     
     private void putServiceAndInit(Service service) throws NacosException {
+        //set service to manager
         putService(service);
         service = getService(service.getNamespaceId(), service.getName());
+        // init
         service.init();
+
         consistencyService
                 .listen(KeyBuilder.buildInstanceListKey(service.getNamespaceId(), service.getName(), true), service);
         consistencyService

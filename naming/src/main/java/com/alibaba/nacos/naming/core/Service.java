@@ -297,9 +297,12 @@ public class Service extends com.alibaba.nacos.api.naming.pojo.Service implement
      * Init service.
      */
     public void init() {
+        //开启临时实例的心跳检测任务
         HealthCheckReactor.scheduleCheck(clientBeatCheckTask);
+        //遍历注册表中的集群
         for (Map.Entry<String, Cluster> entry : clusterMap.entrySet()) {
             entry.getValue().setService(this);
+            //完成集群的初始化
             entry.getValue().init();
         }
     }

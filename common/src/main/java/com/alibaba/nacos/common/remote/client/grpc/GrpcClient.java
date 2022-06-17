@@ -291,7 +291,8 @@ public abstract class GrpcClient extends RpcClient {
                     response.getRequestId());
         }
     }
-    
+
+    // 引入了基于 gRPC 的长连接模型来提升配置监听的性能, 客户端和服务端会建立长连接来监听配置的变更, 一旦服务端有配置变更, 就会将配置信息推送到客户端中
     @Override
     public Connection connectToServer(ServerInfo serverInfo) {
         try {
@@ -299,29 +300,35 @@ public abstract class GrpcClient extends RpcClient {
                 this.grpcExecutor = createGrpcExecutor(serverInfo.getServerIp());
             }
             int port = serverInfo.getServerPort() + rpcPortOffset();
+            //创建一个新的通道
             ManagedChannel managedChannel = createNewManagedChannel(serverInfo.getServerIp(), port);
+            // 创建一个 Grpc 的 Stub
             RequestGrpc.RequestFutureStub newChannelStubTemp = createNewChannelStub(managedChannel);
             if (newChannelStubTemp != null) {
-                
+                // 检查服务端是否可用
                 Response response = serverCheck(serverInfo.getServerIp(), port, newChannelStubTemp);
                 if (response == null || !(response instanceof ServerCheckResponse)) {
                     shuntDownChannel(managedChannel);
                     return null;
                 }
-                
+                // 创建一个 Grpc 的 Stream
                 BiRequestStreamGrpc.BiRequestStreamStub biRequestStreamStub = BiRequestStreamGrpc
                         .newStub(newChannelStubTemp.getChannel());
+                // 创建连接信息, 保存 Grpc 的连接信息, 也就是长连接的一个 holder
                 GrpcConnection grpcConn = new GrpcConnection(serverInfo, grpcExecutor);
                 grpcConn.setConnectionId(((ServerCheckResponse) response).getConnectionId());
                 
                 //create stream request and bind connection event to this connection.
+                // 创建 stream 请求同时绑定到当前连接中
                 StreamObserver<Payload> payloadStreamObserver = bindRequestStream(biRequestStreamStub, grpcConn);
                 
                 // stream observer to send response to server
+                // 绑定 Grpc 相关连接信息
                 grpcConn.setPayloadStreamObserver(payloadStreamObserver);
                 grpcConn.setGrpcFutureServiceStub(newChannelStubTemp);
                 grpcConn.setChannel(managedChannel);
                 //send a  setup request.
+                // 发送一个初始化连接请求, 用于上报客户端的一些信息, 例如标签, 客户端版本等
                 ConnectionSetupRequest conSetupRequest = new ConnectionSetupRequest();
                 conSetupRequest.setClientVersion(VersionUtils.getFullClientVersion());
                 conSetupRequest.setLabels(super.getLabels());
@@ -329,6 +336,7 @@ public abstract class GrpcClient extends RpcClient {
                 conSetupRequest.setTenant(super.getTenant());
                 grpcConn.sendRequest(conSetupRequest);
                 //wait to register connection setup
+                // 等待连接建立成功
                 Thread.sleep(100L);
                 return grpcConn;
             }
