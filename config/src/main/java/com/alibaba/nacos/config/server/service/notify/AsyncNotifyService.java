@@ -59,7 +59,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Async notify service.
- *
+ *该类在初始化的时候，会向事件中心NotifyCenter注册一个监听者，用以监听数据变更事件并异步执行数据的Dump操作
  * @author Nacos
  */
 @Service
@@ -110,17 +110,22 @@ public class AsyncNotifyService {
                     Queue<NotifySingleRpcTask> rpcQueue = new LinkedList<>();
                     
                     for (Member member : ipList) {
+                        // 判断是否是长轮询
                         if (!MemberUtil.isSupportedLongCon(member)) {
+                            // 添加一个长轮询的异步dump任务
                             httpQueue.add(new NotifySingleTask(dataId, group, tenant, tag, dumpTs, member.getAddress(),
                                     evt.isBeta));
                         } else {
+                            // 添加一个长连接的异步dump任务
                             rpcQueue.add(
                                     new NotifySingleRpcTask(dataId, group, tenant, tag, dumpTs, evt.isBeta, member));
                         }
                     }
+                    // 判断并执行长轮询的异步dump任务
                     if (!httpQueue.isEmpty()) {
                         ConfigExecutor.executeAsyncNotify(new AsyncTask(nacosAsyncRestTemplate, httpQueue));
                     }
+                    // 判断并执行长连接的异步dump任务
                     if (!rpcQueue.isEmpty()) {
                         ConfigExecutor.executeAsyncNotify(new AsyncRpcTask(rpcQueue));
                     }
@@ -193,7 +198,8 @@ public class AsyncNotifyService {
         public void run() {
             while (!queue.isEmpty()) {
                 NotifySingleRpcTask task = queue.poll();
-                
+
+                // 创建配置变更请求
                 ConfigChangeClusterSyncRequest syncRequest = new ConfigChangeClusterSyncRequest();
                 syncRequest.setDataId(task.getDataId());
                 syncRequest.setGroup(task.getGroup());
@@ -202,26 +208,32 @@ public class AsyncNotifyService {
                 syncRequest.setTag(task.tag);
                 syncRequest.setTenant(task.getTenant());
                 Member member = task.member;
+                // 如果是自身的数据变更，直接执行dump操作
                 if (memberManager.getSelf().equals(member)) {
                     if (syncRequest.isBeta()) {
+                        // 同步Beta配置
                         dumpService.dump(syncRequest.getDataId(), syncRequest.getGroup(), syncRequest.getTenant(),
                                 syncRequest.getLastModified(), NetUtils.localIP(), true);
                     } else {
+                        // 同步正式配置
                         dumpService.dump(syncRequest.getDataId(), syncRequest.getGroup(), syncRequest.getTenant(),
                                 syncRequest.getTag(), syncRequest.getLastModified(), NetUtils.localIP());
                     }
                     continue;
                 }
-                
+                // 通知其他服务端进行dump
                 if (memberManager.hasMember(member.getAddress())) {
                     // start the health check and there are ips that are not monitored, put them directly in the notification queue, otherwise notify
+                    //启动健康检查有没有被监控的ip，直接放入通知队列，否则通知
                     boolean unHealthNeedDelay = memberManager.isUnHealth(member.getAddress());
                     if (unHealthNeedDelay) {
                         // target ip is unhealthy, then put it in the notification list
+                        //目标ip不健康，然后放到通知列表中
                         ConfigTraceService.logNotifyEvent(task.getDataId(), task.getGroup(), task.getTenant(), null,
                                 task.getLastModified(), InetUtils.getSelfIP(), ConfigTraceService.NOTIFY_EVENT_UNHEALTH,
                                 0, member.getAddress());
                         // get delay time and set fail count to the task
+                        //获取延迟时间并为任务设置失败计数
                         asyncTaskExecute(task);
                     } else {
     

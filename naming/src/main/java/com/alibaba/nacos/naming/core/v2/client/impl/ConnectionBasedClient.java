@@ -21,7 +21,7 @@ import com.alibaba.nacos.naming.misc.ClientConfig;
 
 /**
  * Nacos naming client based on tcp session.
- *
+ * 用来管理客户端的连接，可以进行连接，断开连接，验证连接是否有效等操作，其内部有一个线程池定时清除无效的连接
  * <p>The client is bind to the tcp session. When the tcp session disconnect, the client should be clean.
  *
  * @author xiweng.yy

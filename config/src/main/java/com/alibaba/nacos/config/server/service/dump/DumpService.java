@@ -371,6 +371,7 @@ public abstract class DumpService {
     public void dump(String dataId, String group, String tenant, long lastModified, String handleIp, boolean isBeta) {
         String groupKey = GroupKey2.getKey(dataId, group, tenant);
         String taskKey = String.join("+", dataId, group, tenant, String.valueOf(isBeta));
+        //根据配置变更信息，提交一个异步的DumpTask任务,后续会由DumpProcessor类的process方法进行处理
         dumpTaskMgr.addTask(taskKey, new DumpTask(groupKey, lastModified, handleIp, isBeta));
         DUMP_LOG.info("[dump-task] add task. groupKey={}, taskKey={}", groupKey, taskKey);
     }

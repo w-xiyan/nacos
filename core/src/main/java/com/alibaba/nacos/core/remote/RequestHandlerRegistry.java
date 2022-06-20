@@ -35,6 +35,7 @@ import java.util.Map;
 
 /**
  * RequestHandlerRegistry.
+ * 当Spring初始化完成之后，加载com.alibaba.nacos.core.remote.RequestHandler，注册为事件监听器
  *
  * @author liuzunfei
  * @version $Id: RequestHandlerRegistry.java, v 0.1 2020年07月13日 8:24 PM liuzunfei Exp $
@@ -42,7 +43,10 @@ import java.util.Map;
 
 @Service
 public class RequestHandlerRegistry implements ApplicationListener<ContextRefreshedEvent> {
-    
+
+    /**
+     * 请求处理器集合
+     */
     Map<String, RequestHandler> registryHandlers = new HashMap<>();
     
     @Autowired
@@ -57,7 +61,13 @@ public class RequestHandlerRegistry implements ApplicationListener<ContextRefres
     public RequestHandler getByRequestType(String requestType) {
         return registryHandlers.get(requestType);
     }
-    
+
+    /**
+     * 此监听器的主要作用就是加载com.alibaba.nacos.core.remote.RequestHandler的子类到registryHandlers,
+     * 后续做请求处理使用,可以看做是策略模式的一个体现
+     *
+     * @param event event
+     */
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         Map<String, RequestHandler> beansOfType = event.getApplicationContext().getBeansOfType(RequestHandler.class);

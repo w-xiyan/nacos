@@ -59,6 +59,7 @@ public class GrpcConnection extends Connection {
                 
                 Payload payload = GrpcUtils.convert(request);
                 traceIfNecessary(payload);
+                //客户端收到配置更新的请求，就会更新客户端的配置了,至此，一个灰度配置就发布成功了。
                 streamObserver.onNext(payload);
             }
         } catch (Exception e) {
@@ -91,6 +92,7 @@ public class GrpcConnection extends Connection {
                 callBack, () -> RpcAckCallbackSynchronizer.clearFuture(getMetaInfo().getConnectionId(), requestId));
         
         RpcAckCallbackSynchronizer.syncCallback(getMetaInfo().getConnectionId(), requestId, defaultPushFuture);
+        //将推送请求推入gRPC的流中
         sendRequestNoAck(request);
         return defaultPushFuture;
     }

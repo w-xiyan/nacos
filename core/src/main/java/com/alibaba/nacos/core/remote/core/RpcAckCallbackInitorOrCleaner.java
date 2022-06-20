@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * RemoteConnectionEventListener.
- *
+ * grpc回调初始化以及清理监听器
  * @author liuzunfei
  * @version $Id: RemoteConnectionEventListener.java, v 0.1 2020年08月10日 1:04 AM liuzunfei Exp $
  */

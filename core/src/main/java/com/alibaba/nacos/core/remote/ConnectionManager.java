@@ -151,9 +151,10 @@ public class ConnectionManager extends Subscriber<ConnectionLimitRuleChangeEvent
             if (traced(connection.getMetaInfo().clientIp)) {
                 connection.setTraced(true);
             }
+            // 注册connection
             connections.put(connectionId, connection);
             connectionForClientIp.get(connection.getMetaInfo().clientIp).getAndIncrement();
-            
+            //由监听事件实现具体的建立连接的逻辑，建立完成之后才会进行注册逻辑的执行
             clientConnectionEventListenerRegistry.notifyClientConnected(connection);
             Loggers.REMOTE_DIGEST
                     .info("new connection registered successfully, connectionId = {},connection={} ", connectionId,

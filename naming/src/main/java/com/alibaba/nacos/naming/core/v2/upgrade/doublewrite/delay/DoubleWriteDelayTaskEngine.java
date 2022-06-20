@@ -30,8 +30,12 @@ import org.springframework.stereotype.Component;
 public class DoubleWriteDelayTaskEngine extends NacosDelayTaskExecuteEngine {
     
     public DoubleWriteDelayTaskEngine() {
+        //双写执行引擎
+        //执行引擎名称和日志打印器
         super(DoubleWriteDelayTaskEngine.class.getSimpleName(), Loggers.SRV_LOG);
+        //添加v1版本的任务处理器
         addProcessor("v1", new ServiceChangeV1Task.ServiceChangeV1TaskProcessor());
+        //添加v2版本的任务处理器
         addProcessor("v2", new ServiceChangeV2Task.ServiceChangeV2TaskProcessor());
     }
     

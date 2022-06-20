@@ -86,13 +86,13 @@ public class GrpcUtils {
     
     /**
      * convert request to payload.
-     *
+     *该方法主要将一个Request转换为gRPC的Payload。
      * @param request request.
      * @param meta    request meta.
      * @return payload.
      */
     public static Payload convert(Request request, RequestMeta meta) {
-        //meta.
+        //meta.设置元信息
         Payload.Builder payloadBuilder = Payload.newBuilder();
         Metadata.Builder metaBuilder = Metadata.newBuilder();
         if (meta != null) {
@@ -103,7 +103,9 @@ public class GrpcUtils {
         
         // request body .
         request.clearHeaders();
+        // 转换为json
         String jsonString = toJson(request);
+        // 创建Payload
         return payloadBuilder
                 .setBody(Any.newBuilder().setValue(ByteString.copyFrom(jsonString, StandardCharsets.UTF_8)))
                 .build();

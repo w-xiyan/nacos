@@ -70,7 +70,12 @@ public class GrpcBiStreamRequestAcceptor extends BiRequestStreamGrpc.BiRequestSt
         }
         
     }
-    
+
+    /**
+     * 接收客户端请求
+     * @param responseObserver
+     * @return
+     */
     @Override
     public StreamObserver<Payload> requestBiStream(StreamObserver<Payload> responseObserver) {
         
@@ -88,7 +93,7 @@ public class GrpcBiStreamRequestAcceptor extends BiRequestStreamGrpc.BiRequestSt
             
             @Override
             public void onNext(Payload payload) {
-                
+                // 获取客户端IP
                 clientIp = payload.getMetadata().getClientIp();
                 traceDetailIfNecessary(payload);
                 
@@ -107,6 +112,7 @@ public class GrpcBiStreamRequestAcceptor extends BiRequestStreamGrpc.BiRequestSt
                                     payload.getBody().getValue().toStringUtf8(), payload.getMetadata());
                     return;
                 }
+                // 处理初始化请求
                 if (parseObj instanceof ConnectionSetupRequest) {
                     ConnectionSetupRequest setUpRequest = (ConnectionSetupRequest) parseObj;
                     Map<String, String> labels = setUpRequest.getLabels();
@@ -119,12 +125,16 @@ public class GrpcBiStreamRequestAcceptor extends BiRequestStreamGrpc.BiRequestSt
                             remoteIp, remotePort, localPort, ConnectionType.GRPC.getType(),
                             setUpRequest.getClientVersion(), appName, setUpRequest.getLabels());
                     metaInfo.setTenant(setUpRequest.getTenant());
+
+                    // 服务端的长连接信息holder
                     Connection connection = new GrpcConnection(metaInfo, responseObserver, CONTEXT_KEY_CHANNEL.get());
                     connection.setAbilities(setUpRequest.getAbilities());
                     boolean rejectSdkOnStarting = metaInfo.isSdkSource() && !ApplicationUtils.isStarted();
-                    
+
+                    // 注册connection到connectionManager中
                     if (rejectSdkOnStarting || !connectionManager.register(connectionId, connection)) {
                         //Not register to the connection manager if current server is over limit or server is starting.
+                        //如果当前服务器超出限制或服务器正在启动，则不注册到连接管理器
                         try {
                             Loggers.REMOTE_DIGEST.warn("[{}]Connection register fail,reason:{}", connectionId,
                                     rejectSdkOnStarting ? " server is not started" : " server is over limited.");

@@ -31,7 +31,19 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 @SuppressWarnings("PMD.AbstractClassShouldStartWithAbstractNamingRule")
 public abstract class RequestHandler<T extends Request, S extends Response> {
-    
+    /**
+     * com.alibaba.nacos.config.server.remote.ConfigChangeBatchListenRequestHandler 	节点之间配置互相同步的处理器
+     * com.alibaba.nacos.config.server.remote.ConfigChangeBatchListenRequestHandler 	配置改变监听处理器
+     * com.alibaba.nacos.config.server.remote.ConfigPublishRequestHandler 	配置发布监听处理器
+     * com.alibaba.nacos.config.server.remote.ConfigQueryRequestHandler 	配置查询请求处理器
+     * com.alibaba.nacos.config.server.remote.ConfigRemoveRequestHandler 	配置移除请求处理器
+     * com.alibaba.nacos.naming.remote.rpc.handler.DistroDataRequestHandler 	distro一致性服务处理器（节点点同步数据）
+     * com.alibaba.nacos.core.remote.HealthCheckRequestHandler 	健康检查处理器
+     * com.alibaba.nacos.naming.remote.rpc.handler.InstanceRequestHandler 	实例注册，移除处理器
+     * com.alibaba.nacos.core.remote.core.ServerLoaderInfoRequestHandler 	服务信息加载处理器
+     * com.alibaba.nacos.naming.remote.rpc.handler.ServiceListRequestHandler 	服务列表请求处理器
+     * com.alibaba.nacos.naming.remote.rpc.handler.ServiceQueryRequestHandler 	服务查询处理器
+     */
     @Autowired
     private RequestFilters requestFilters;
     

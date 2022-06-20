@@ -170,6 +170,7 @@ public class ConfigController {
         }
         
         final Timestamp time = TimeUtils.getCurrentTime();
+        // 目标灰度机器的IP地址
         String betaIps = request.getHeader("betaIps");
         ConfigInfo configInfo = new ConfigInfo(dataId, group, tenant, appName, content);
         configInfo.setType(type);
@@ -186,9 +187,10 @@ public class ConfigController {
                         new ConfigDataChangeEvent(false, dataId, group, tenant, tag, time.getTime()));
             }
         } else {
-            // beta publish
+            // beta publish 发布Beta 配置
             configInfo.setEncryptedDataKey(encryptedDataKey);
             persistService.insertOrUpdateBeta(configInfo, betaIps, srcIp, srcUser, time, false);
+            // 通知配置变更
             ConfigChangePublisher.notifyConfigChange(
                     new ConfigDataChangeEvent(true, dataId, group, tenant, time.getTime()));
         }

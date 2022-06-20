@@ -49,7 +49,9 @@ public class DumpConfigHandler extends Subscriber<ConfigDumpEvent> {
         final String encryptedDataKey = event.getEncryptedDataKey();
         if (event.isBeta()) {
             boolean result;
+            // 删除操作
             if (event.isRemove()) {
+                //对比配置信息
                 result = ConfigCacheService.removeBeta(dataId, group, namespaceId);
                 if (result) {
                     ConfigTraceService.logDumpEvent(dataId, group, namespaceId, null, lastModified, event.getHandleIp(),
@@ -57,6 +59,7 @@ public class DumpConfigHandler extends Subscriber<ConfigDumpEvent> {
                 }
                 return result;
             } else {
+                // 更新或者发布
                 result = ConfigCacheService
                         .dumpBeta(dataId, group, namespaceId, content, lastModified, event.getBetaIps(),
                                 encryptedDataKey);

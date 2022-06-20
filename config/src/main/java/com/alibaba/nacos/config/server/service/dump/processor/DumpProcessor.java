@@ -63,13 +63,14 @@ public class DumpProcessor implements NacosTaskProcessor {
         
         if (isBeta) {
             // if publish beta, then dump config, update beta cache
+            // 如果发布 beta，然后转储配置，更新 beta 缓存
             ConfigInfo4Beta cf = persistService.findConfigInfo4Beta(dataId, group, tenant);
             
             build.remove(Objects.isNull(cf));
             build.betaIps(Objects.isNull(cf) ? null : cf.getBetaIps());
             build.content(Objects.isNull(cf) ? null : cf.getContent());
             build.encryptedDataKey(Objects.isNull(cf) ? null : cf.getEncryptedDataKey());
-            
+            //触发配置转储事件
             return DumpConfigHandler.configDump(build.build());
         }
         if (StringUtils.isBlank(tag)) {
@@ -86,6 +87,7 @@ public class DumpProcessor implements NacosTaskProcessor {
             build.content(Objects.isNull(cf) ? null : cf.getContent());
             
         }
+        //来更新缓存的配置信息
         return DumpConfigHandler.configDump(build.build());
     }
 }

@@ -444,6 +444,7 @@ public class ConfigCacheService {
             if (!PropertyUtil.isDirectRead()) {
                 DiskUtil.removeConfigInfo4Beta(dataId, group, tenant);
             }
+            //发布事件LocalDataChangeEvent，触发RpcConfigChangeNotifier的configDataChanged方法来推送配置
             NotifyCenter.publishEvent(new LocalDataChangeEvent(groupKey, true, CACHE.get(groupKey).getIps4Beta()));
             CACHE.get(groupKey).setBeta(false);
             CACHE.get(groupKey).setIps4Beta(null);

@@ -42,6 +42,7 @@ public class RpcPushService {
     
     /**
      * push response with no ack.
+     * 没有 ack 的推送响应
      *
      * @param connectionId    connectionId.
      * @param request         request.
@@ -49,9 +50,12 @@ public class RpcPushService {
      */
     public void pushWithCallback(String connectionId, ServerRequest request, PushCallBack requestCallBack,
             Executor executor) {
+        //获取相应的Connection，然后执行asyncRequest将配置推送到客户端中。如果连接已经关闭，则注销连接
         Connection connection = connectionManager.getConnection(connectionId);
         if (connection != null) {
             try {
+                 //执行配置推送
+                //底层即是调用Grpc建立的Stream的onNext方法，将配置推送给客户端,core/src/main/java/com/alibaba/nacos/core/remote/grpc/GrpcConnection.java
                 connection.asyncRequest(request, new AbstractRequestCallBack(requestCallBack.getTimeout()) {
                     
                     @Override
